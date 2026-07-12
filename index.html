@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>POLACAM — 白いポラロイドが、長押しで浮かび上がる</title>
+<meta name="description" content="撮った瞬間は真っ白なポラロイド。長押し（Live Photo）でそっと像と昭和のLCD日付が浮かび上がる、ちょっと不思議なフィルムカメラ体験。手書き・GIF/MP4書き出しも。すべて端末内で完結。" />
+<link rel="icon" href="assets/icon.png" />
+<meta property="og:title" content="POLACAM — 白いポラロイドが、長押しで浮かび上がる" />
+<meta property="og:description" content="撮った瞬間は真っ白。長押しでそっと像が浮かび上がるポラロイド風カメラ。手書き・レトロ日付・Live Photo/GIF/MP4。" />
+<meta property="og:image" content="assets/og.png" />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#17120c" />
+<style>
+  :root{
+    --bg:#17120c;
+    --card:rgba(255,255,255,.05);
+    --border:rgba(255,255,255,.10);
+    --text:#f6efe3;
+    --muted:#b6a793;
+    --orange:#ff8a3d;
+    --pink:#ff5d73;
+    --grad:linear-gradient(120deg,#ff8a3d,#ff5d73,#9b6bff);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Noto Sans JP",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+  .lang-en{display:none}
+  body.en .lang-ja{display:none}
+  body.en .lang-en{display:initial}
+  body.en .lang-en.block{display:block}
+
+  /* glow background */
+  .bg-glow{position:fixed;inset:0;z-index:-1;overflow:hidden;background:var(--bg)}
+  .bg-glow::before,.bg-glow::after{content:"";position:absolute;border-radius:50%;filter:blur(120px);opacity:.42}
+  .bg-glow::before{width:540px;height:540px;background:#ff8a3d;top:-180px;left:-140px}
+  .bg-glow::after{width:520px;height:520px;background:#9b6bff;bottom:-200px;right:-140px}
+
+  /* header */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(23,18,12,.62);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;gap:14px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.2px}
+  .brand img{width:34px;height:34px;border-radius:9px}
+  .nav .spacer{flex:1}
+  .nav a.link{color:var(--muted);text-decoration:none;font-size:14px;font-weight:600}
+  .nav a.link:hover{color:var(--text)}
+  .nav a.priv{border:1px solid var(--border);padding:7px 14px;border-radius:999px;color:var(--text)}
+  .nav a.priv:hover{border-color:var(--orange);background:rgba(255,138,61,.12)}
+  .langtoggle{display:flex;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+  .langtoggle button{background:transparent;color:var(--muted);border:0;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
+  .langtoggle button.active{background:var(--grad);color:#fff}
+
+  /* hero */
+  .hero{padding:74px 0 30px;text-align:center}
+  .hero img.appicon{width:104px;height:104px;border-radius:24px;box-shadow:0 18px 50px rgba(255,138,61,.35);margin-bottom:24px}
+  .hero h1{font-size:clamp(32px,6vw,60px);line-height:1.1;font-weight:900;letter-spacing:-.5px}
+  .hero h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero p.sub{color:var(--muted);font-size:clamp(16px,2.4vw,20px);max-width:660px;margin:18px auto 0}
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+  .soon{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#000;text-decoration:none;padding:12px 20px;border-radius:14px;font-weight:700;opacity:.92}
+  .soon svg{width:24px;height:24px}
+  .soon small{display:block;font-size:10px;font-weight:600;opacity:.7;line-height:1}
+  .soon b{font-size:18px;line-height:1.15}
+  .ghost{display:inline-flex;align-items:center;padding:12px 20px;border-radius:14px;border:1px solid var(--border);color:var(--text);text-decoration:none;font-weight:700;transition:.15s}
+  .ghost:hover{border-color:var(--orange);background:rgba(255,138,61,.12)}
+  .note{margin-top:18px;color:var(--muted);font-size:13px}
+
+  /* showcase strip */
+  .fxwrap{margin:46px 0 8px}
+  .fxgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .fxitem{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--border);box-shadow:0 18px 44px rgba(0,0,0,.5)}
+  .fxitem img{width:100%;display:block;aspect-ratio:9/19.5;object-fit:cover;object-position:center 30%}
+  .fxitem span{position:absolute;left:10px;bottom:10px;font-size:12px;font-weight:800;letter-spacing:.3px;
+    background:rgba(23,18,12,.66);backdrop-filter:blur(6px);padding:5px 11px;border-radius:999px;border:1px solid var(--border)}
+  @media(max-width:760px){.fxgrid{grid-template-columns:repeat(2,1fr)}}
+
+  /* feature rows */
+  section.features{padding:36px 0 10px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:46px;align-items:center;margin:70px 0}
+  .row.rev .txt{order:2}
+  .row .shot{display:flex;justify-content:center;gap:16px}
+  .row .shot img{width:100%;max-width:320px;border-radius:26px;border:1px solid var(--border);box-shadow:0 24px 60px rgba(0,0,0,.55)}
+  .row .shot.duo img{max-width:220px}
+  .tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:rgba(255,138,61,.16);color:#ffc79a;padding:5px 11px;border-radius:999px;margin-bottom:14px}
+  .row h2{font-size:clamp(24px,3.4vw,34px);line-height:1.25;font-weight:850;margin-bottom:12px}
+  .row p{color:var(--muted);font-size:16px}
+  .row ul{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:9px}
+  .row li{display:flex;gap:10px;color:var(--text);font-size:15px}
+  .row li::before{content:"";flex:0 0 auto;width:20px;height:20px;border-radius:6px;background:var(--grad);margin-top:2px;
+    -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/></svg>") center/16px no-repeat;
+    mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/></svg>") center/16px no-repeat}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin:54px 0}
+  .gcard{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px}
+  .gcard .ic{font-size:24px;margin-bottom:10px}
+  .gcard h3{font-size:17px;margin-bottom:6px}
+  .gcard p{color:var(--muted);font-size:14px}
+
+  .section-head{text-align:center;max-width:660px;margin:0 auto}
+  .section-head h2{font-size:clamp(26px,4vw,38px);font-weight:900;letter-spacing:-.3px}
+  .section-head p{color:var(--muted);margin-top:10px}
+
+  .final{text-align:center;padding:72px 0;margin-top:30px}
+  .final h2{font-size:clamp(26px,4vw,40px);font-weight:900;margin-bottom:10px}
+  .final p{color:var(--muted);margin-bottom:26px}
+
+  footer{border-top:1px solid var(--border);padding:34px 0;color:var(--muted);font-size:13px}
+  .foot{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--text)}
+  .foot .spacer{flex:1}
+
+  @media(max-width:760px){
+    .row{grid-template-columns:1fr;gap:24px;margin:54px 0}
+    .row.rev .txt{order:0}
+    .nav a.link{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand"><img src="assets/icon.png" alt="POLACAM" /> POLACAM</div>
+    <div class="spacer"></div>
+    <a class="link" href="#features"><span class="lang-ja">特長</span><span class="lang-en">Features</span></a>
+    <a class="link priv" href="privacy.html"><span class="lang-ja">プライバシー</span><span class="lang-en">Privacy</span></a>
+    <div class="langtoggle">
+      <button id="btn-ja" onclick="setLang('ja')">日本語</button>
+      <button id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero wrap">
+  <img class="appicon" src="assets/icon.png" alt="POLACAM icon" />
+  <h1>
+    <span class="lang-ja">白いポラロイドが、<span class="grad">長押しで浮かび上がる</span>。</span>
+    <span class="lang-en">A blank Polaroid that <span class="grad">develops when you hold it</span>.</span>
+  </h1>
+  <p class="sub">
+    <span class="lang-ja">POLACAM で撮ると、仕上がりは真っ白なポラロイド。長押しすると、Live Photo でそっと像と昭和のLCD日付が浮かび上がります。撮る楽しさと、見せる驚きを一枚に。</span>
+    <span class="lang-en">Shoot with POLACAM and you get a blank white Polaroid. Press and hold, and the image — with a retro LCD date — quietly rises up as a Live Photo. The fun of shooting, the surprise of reveal, in a single print.</span>
+  </p>
+  <div class="cta">
+    <span class="soon">
+      <svg viewBox="0 0 384 512" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zM255.4 92.1c30.5-36.2 27.7-69.2 26.8-81.1-26.9 1.6-58 18.4-75.7 39.1-19.5 22.2-31 49.6-28.5 81 29.1 2.2 55.6-12.8 77.4-39z"/></svg>
+      <span><small class="lang-ja">近日公開</small><small class="lang-en">Coming soon</small><b>App Store</b></span>
+    </span>
+    <a class="ghost" href="#features"><span class="lang-ja">特長を見る ↓</span><span class="lang-en">See features ↓</span></a>
+  </div>
+  <p class="note">
+    <span class="lang-ja">iPhone / iOS 17+ · すべて端末内で処理 · 写真が外部に送られることはありません</span>
+    <span class="lang-en">iPhone / iOS 17+ · 100% on-device · Your photos never leave your phone</span>
+  </p>
+
+  <!-- SHOWCASE -->
+  <div class="fxwrap">
+    <div class="fxgrid">
+      <div class="fxitem"><img src="assets/shot-gallery.jpg" alt="Gallery" loading="lazy" /><span class="lang-ja">見る</span><span class="lang-en">Reveal</span></div>
+      <div class="fxitem"><img src="assets/shot-shoot.jpg" alt="Shoot" loading="lazy" /><span class="lang-ja">撮る</span><span class="lang-en">Shoot</span></div>
+      <div class="fxitem"><img src="assets/shot-write.jpg" alt="Handwriting" loading="lazy" /><span class="lang-ja">手書き</span><span class="lang-en">Draw</span></div>
+      <div class="fxitem"><img src="assets/shot-settings.jpg" alt="Settings" loading="lazy" /><span class="lang-ja">設定</span><span class="lang-en">Options</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features wrap" id="features">
+
+  <!-- 1. The magic reveal -->
+  <div class="row">
+    <div class="txt">
+      <span class="tag"><span class="lang-ja">浮かび上がる魔法</span><span class="lang-en">The reveal</span></span>
+      <h2><span class="lang-ja">撮った瞬間は真っ白。長押しで、そっと像が浮かぶ</span><span class="lang-en">Blank at first — then it develops in your hand</span></h2>
+      <p><span class="lang-ja">できあがりは白いポラロイド。写真アプリで長押しすると Live Photo が再生され、像と昭和のLCD日付がじんわり現れます。渡した相手が「え、白い…？」から驚く、そんな一枚に。</span>
+         <span class="lang-en">The finished print looks blank white. Press and hold in Photos and the Live Photo plays — the image and a retro LCD date gently appear. Perfect for that “wait… it's blank?” moment that turns into a smile.</span></p>
+      <ul>
+        <li><span class="lang-ja">白い表紙 → 長押しで現像される Live Photo</span><span class="lang-en">White cover → develops on long-press (Live Photo)</span></li>
+        <li><span class="lang-ja">昭和のデート写しっぽいオレンジのLCD日付</span><span class="lang-en">Retro orange 7-segment LCD date</span></li>
+        <li><span class="lang-ja">浮かび上がるまでの時間も設定可能</span><span class="lang-en">Adjustable reveal timing</span></li>
+      </ul>
+    </div>
+    <div class="shot"><img src="assets/shot-gallery.jpg" alt="Revealed vs blank Polaroid" loading="lazy" /></div>
+  </div>
+
+  <!-- 2. Real polaroid feel -->
+  <div class="row rev">
+    <div class="txt">
+      <span class="tag"><span class="lang-ja">本物みたいな操作感</span><span class="lang-en">Feels real</span></span>
+      <h2><span class="lang-ja">オレンジのボタンで撮って、排出口からジーッと</span><span class="lang-en">Tap the orange shutter, watch it slide out</span></h2>
+      <p><span class="lang-ja">ファインダー窓に映る正方形をオレンジのシャッターでパチリ。撮ると、カメラの排出口から印画紙がジーッと出てきて、画面いっぱいに広がります。ハプティクス付きで、指先に本物の感触。</span>
+         <span class="lang-en">Frame the square in the viewfinder and press the orange shutter. The print slides out of the camera's slot and grows to fill the screen — complete with haptics for a tactile, real-camera feel.</span></p>
+      <ul>
+        <li><span class="lang-ja">1:1 正方形のファインダー / 前後カメラ切替</span><span class="lang-en">1:1 square viewfinder · front/back camera</span></li>
+        <li><span class="lang-ja">排出アニメーション＋シャッターの触覚</span><span class="lang-en">Eject animation + shutter haptics</span></li>
+        <li><span class="lang-ja">既存の写真を選んでポラロイド化も</span><span class="lang-en">Turn existing photos into Polaroids too</span></li>
+      </ul>
+    </div>
+    <div class="shot duo">
+      <img src="assets/shot-shoot.jpg" alt="Shooting screen" loading="lazy" />
+      <img src="assets/shot-develop.jpg" alt="Eject animation" loading="lazy" />
+    </div>
+  </div>
+
+  <!-- 3. Handwriting -->
+  <div class="row">
+    <div class="txt">
+      <span class="tag"><span class="lang-ja">手書きでひとこと</span><span class="lang-en">Write on it</span></span>
+      <h2><span class="lang-ja">余白に手書き。8色ペン・太さ・白フチ</span><span class="lang-en">Handwrite on the frame — pens, widths, white outline</span></h2>
+      <p><span class="lang-ja">ポラロイドの余白にメッセージを手書き。8色のペン、3段階の太さ、写真の上でも映える白フチ。ピンチで拡大して細かく描け、書き間違えても1手ずつ戻せます。</span>
+         <span class="lang-en">Scribble a message on the Polaroid border. Eight pen colors, three widths, and a white outline that pops even over the photo. Pinch to zoom for detail, and undo stroke by stroke.</span></p>
+      <ul>
+        <li><span class="lang-ja">8色ペン・細/中/太・白フチON/OFF</span><span class="lang-en">8 colors · thin/medium/thick · white outline</span></li>
+        <li><span class="lang-ja">ピンチで拡大しながら描画</span><span class="lang-en">Pinch-zoom while drawing</span></li>
+        <li><span class="lang-ja">確実に効くストロークUndo</span><span class="lang-en">Reliable per-stroke undo</span></li>
+      </ul>
+    </div>
+    <div class="shot"><img src="assets/shot-write.jpg" alt="Handwriting on a Polaroid" loading="lazy" /></div>
+  </div>
+
+  <!-- 4. Share the reveal -->
+  <div class="row rev">
+    <div class="txt">
+      <span class="tag"><span class="lang-ja">共有</span><span class="lang-en">Share</span></span>
+      <h2><span class="lang-ja">送った相手も、あの瞬間を味わえる</span><span class="lang-en">The person you send it to feels it too</span></h2>
+      <p><span class="lang-ja">相手に現像前の真っ白な写真を送った後、相手側でもその効果を楽しめます。長押しすれば、その手の中でじわっと像が浮かび上がる——あの時の感動を、そのまま届けましょう。</span>
+         <span class="lang-en">Send the blank, un-developed photo — and the reveal travels with it. When they press and hold, the image gently rises up in their hands. That little moment of wonder, delivered as-is.</span></p>
+      <ul>
+        <li><span class="lang-ja">LINE・メール・SNS・AirDrop でそのまま共有</span><span class="lang-en">Share via Messages, Mail, social & AirDrop</span></li>
+        <li><span class="lang-ja">Live Photo のまま届くから、相手も長押しで現像</span><span class="lang-en">Arrives as a Live Photo — they long-press to develop</span></li>
+        <li><span class="lang-ja">「白い…？」から驚く、渡す楽しさ</span><span class="lang-en">The fun of that “wait… it's blank?” surprise</span></li>
+      </ul>
+    </div>
+    <div class="shot"><img src="assets/shot-gallery.jpg" alt="Blank vs revealed Polaroid" loading="lazy" /></div>
+  </div>
+</section>
+
+<!-- GRID -->
+<section class="wrap">
+  <div class="section-head">
+    <h2><span class="lang-ja">レトロで、ちゃんと使える</span><span class="lang-en">Retro, but genuinely useful</span></h2>
+    <p><span class="lang-ja">見た目の楽しさだけじゃない、細かな作り込み。</span><span class="lang-en">Playful looks with the details done right.</span></p>
+  </div>
+  <div class="grid">
+    <div class="gcard"><div class="ic">🎞️</div>
+      <h3><span class="lang-ja">Live Photo / GIF / MP4</span><span class="lang-en">Live Photo / GIF / MP4</span></h3>
+      <p><span class="lang-ja">書き出し形式を選べます。GIF・MP4は長押し/タップで現像を再生。</span><span class="lang-en">Choose your export. GIF & MP4 replay the develop on tap.</span></p>
+    </div>
+    <div class="gcard"><div class="ic">🕗</div>
+      <h3><span class="lang-ja">昭和のLCD日付</span><span class="lang-en">Retro LCD date</span></h3>
+      <p><span class="lang-ja">オレンジの7セグ日付を焼き付け。スタイルも選べます。</span><span class="lang-en">Burn in an orange 7-segment date, with style options.</span></p>
+    </div>
+    <div class="gcard"><div class="ic">🎨</div>
+      <h3><span class="lang-ja">ポラロイド画質</span><span class="lang-en">Polaroid look</span></h3>
+      <p><span class="lang-ja">コントラスト高め・ハイトーンなフィルム風の仕上がり。</span><span class="lang-en">Higher contrast, high-key film-style finish.</span></p>
+    </div>
+    <div class="gcard"><div class="ic">⬛</div>
+      <h3><span class="lang-ja">1:1 正方形</span><span class="lang-en">1:1 square</span></h3>
+      <p><span class="lang-ja">ポラロイドらしい正方形。下の余白も本物らしく。</span><span class="lang-en">Classic square frame with a true bottom border.</span></p>
+    </div>
+    <div class="gcard"><div class="ic">🖐️</div>
+      <h3><span class="lang-ja">傾けて眺める</span><span class="lang-en">Tilt to view</span></h3>
+      <p><span class="lang-ja">指でなぞると写真が少し傾き、光沢がきらめく簡易3D。</span><span class="lang-en">Drag to tilt the print in faux-3D with a moving gloss.</span></p>
+    </div>
+    <div class="gcard"><div class="ic">🔒</div>
+      <h3><span class="lang-ja">すべて端末内</span><span class="lang-en">100% on-device</span></h3>
+      <p><span class="lang-ja">撮影も現像も端末内で完結。外部に送信されません。</span><span class="lang-en">Everything runs on your phone. Nothing is uploaded.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final wrap">
+  <h2><span class="lang-ja">白い一枚に、思い出をそっと閉じ込めて</span><span class="lang-en">Tuck a memory into a blank white print</span></h2>
+  <p><span class="lang-ja">POLACAM は近日公開予定です。</span><span class="lang-en">POLACAM is coming soon.</span></p>
+  <div class="cta">
+    <span class="soon">
+      <svg viewBox="0 0 384 512" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zM255.4 92.1c30.5-36.2 27.7-69.2 26.8-81.1-26.9 1.6-58 18.4-75.7 39.1-19.5 22.2-31 49.6-28.5 81 29.1 2.2 55.6-12.8 77.4-39z"/></svg>
+      <span><small class="lang-ja">近日公開</small><small class="lang-en">Coming soon</small><b>App Store</b></span>
+    </span>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div class="brand"><img src="assets/icon.png" alt="" style="width:26px;height:26px;border-radius:7px" /> POLACAM</div>
+    <div class="spacer"></div>
+    <a href="privacy.html"><span class="lang-ja">プライバシーポリシー</span><span class="lang-en">Privacy Policy</span></a>
+    <a href="https://hideto0926.github.io/" target="_blank" rel="noopener"><span class="lang-ja">開発者</span><span class="lang-en">Developer</span></a>
+    <a href="mailto:hideto0926@gmail.com"><span class="lang-ja">お問い合わせ</span><span class="lang-en">Contact</span></a>
+  </div>
+  <div class="wrap" style="margin-top:14px;opacity:.7">© POLACAM. All rights reserved.</div>
+</footer>
+
+<script>
+  function setLang(l){
+    document.body.classList.toggle('en', l==='en');
+    document.documentElement.lang = l;
+    document.getElementById('btn-en').classList.toggle('active', l==='en');
+    document.getElementById('btn-ja').classList.toggle('active', l==='ja');
+    try{ localStorage.setItem('pola_lang', l); }catch(e){}
+  }
+  (function(){
+    var saved=null; try{ saved=localStorage.getItem('pola_lang'); }catch(e){}
+    var l = saved || ((navigator.language||'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en');
+    setLang(l);
+  })();
+</script>
+</body>
+</html>
